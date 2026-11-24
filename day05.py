@@ -75,6 +75,11 @@ class Contactsclass:
     def show_menu(self):
         return "菜单:增、删、查、列、0（退出）"
 
+    def len(self):
+        i=0
+        for name in self.contacts.items():
+            i+=1
+        return i
 def main():
     file_dir=Path(__file__).with_name("contacts.json")
     book=Contactsclass(file_dir)
@@ -131,7 +136,7 @@ def main():
                print(f"第{i}个联系人 姓名:{name} 联系方式:{number}")
         else:
             print("不存在该功能")
-            break 
+            continue 
 
 
 if __name__=="__main__":
