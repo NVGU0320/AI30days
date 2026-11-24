@@ -1,12 +1,12 @@
 #功能
-增、删、查、改
+增、删、查、列
 json持久化
 json损坏、不存在等异常情况的应对
 
 #运行
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python day5.py
+python day05.py
 
 ## 数据
 contacts.json 首次添加时自动生成，已被 .gitignore 忽略。

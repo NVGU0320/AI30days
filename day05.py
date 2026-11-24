@@ -7,27 +7,30 @@ class Contactsclass:
     def __init__(self,file_dir):
         self.file_dir=file_dir
         self.contacts={}
+        self.load_all()
 
     def load_all(self):
+        self.contacts={}
         if not Path(self.file_dir).exists():
             print("文件不存在，使用空目录")
-            return {}
+            return self.contacts
         try:
             with open(self.file_dir,"r",encoding="utf-8") as f:
-                self.contacts=json.load(f)
+                data=json.load(f)
         except json.JSONDecodeError:
             print("")
-            return {}
+            return self.contacts
         except (OSError, UnicodeDecodeError) as e:
             print(f"")
-            return {}
+            return self.contacts
         if not isinstance(self.contacts,dict):
             print("")
-            return {}
+            return self.contacts
         for name,number in self.contacts.items():
             if not isinstance(name,str) or not isinstance(number,str):
                 print("")
-                return {}
+                return self.contacts
+        self.contacts=data
         return self.contacts
 
     def save_contacts(self):
@@ -40,9 +43,17 @@ class Contactsclass:
             return False
 
     def add_contacts(self,name,number):
+        if name in self.contacts:
+            return "联系人已存在"
+        if name=='':
+            return "联系人不可为空"
+        if len(number)!=11 or not number.isdigit():
+            return "联系方式不合规"
         self.contacts[name]=number
-        self.save_contacts()
-        return True
+        if not self.save_contacts():
+            del self.contacts[name]
+            return "保存失败，已回滚"
+        return "保存成功"
 
     def search_contacts(self,keywords):
         keywords=keywords.lower()
@@ -61,65 +72,49 @@ class Contactsclass:
         return self.contacts
 
     def find(self,name_number):
-        key=None
+        if name_number in self.contacts:
+            key=name_number
+            return key
         for name,number in self.contacts.items():
             if name==name_number or number==name_number:
                 key=name
-        return key
+                return key
+        return None
 
     def delete(self,key):
+        if key is None:
+            return "联系人不存在"
+        number=self.contacts[key]
         del self.contacts[key]
-        self.save_contacts()
-        return True
+        if not self.save_contacts():
+            self.contacts[key]=number
+            return "保存失败，删除已撤销"
+        return "删除成功"
     
     def show_menu(self):
         return "菜单:增、删、查、列、0（退出）"
 
-    def len(self):
-        i=0
-        for name in self.contacts.items():
-            i+=1
-        return i
+    def __len__(self):
+        return len(self.contacts)
 def main():
     file_dir=Path(__file__).with_name("contacts.json")
     book=Contactsclass(file_dir)
     contacts=book.load_all()
     while True:
         print(book.show_menu())
-        act=input("请输入需要的操作:")
+        act=input("请输入需要的操作:").strip()
         if act=='0':
             break
         elif act=='增':
-            name=input("想要添加的姓名:")
-            if name in contacts:
-                print("联系人已存在")
-                continue
-            number=input("联系方式:")
-            if len(number)!=11 or not number.isdigit():
-                print("联系方式不合规")
-                continue
-            x=book.add_contacts(name,number)
-            if x==True:
-                print("成功添加")
-            else:
-                print("添加失败")
+            name=input("想要添加的姓名:").strip()
+            number=input("联系方式:").strip()
+            print(book.add_contacts(name,number))
         elif act=='删':
-            keywords=input("请输入想要删除的姓名或联系方式:")
+            keywords=input("请输入想要删除的姓名或联系方式:").strip()
             key=book.find(keywords)
-            if key is None:
-                print("联系人本身不存在")
-            else:
-                act0=input("确定删除吗？y/n")
-                if act0=='y':
-                    act1=book.delete(keywords)
-                    if act1==True:
-                        print("成功删除")
-                    else:
-                        print("删除失败")
-                else:
-                    print("已取消删除")
+            print(book.delete(key))
         elif act=='查':
-            name_number=input("请输入要查找的联系人或联系方式:")
+            name_number=input("请输入要查找的联系人或联系方式:").strip()
             found_dict=book.search_contacts(name_number)
             if found_dict=={}:
                 print("通讯录为空")
